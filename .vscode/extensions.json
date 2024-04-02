@@ -3,6 +3,5 @@
     "mkhl.direnv",
     "jnoortheen.nix-ide",
     "TxPipe.aiken",
-    "denoland.vscode-deno",
   ]
 }
