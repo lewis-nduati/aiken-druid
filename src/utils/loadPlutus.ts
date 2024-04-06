@@ -1,4 +1,4 @@
-import { PlutusJSON } from "./types.ts";
+import { PlutusJSON } from "../types/aiken"
 
 export async function loadPlutusJSON(
   filePath: string,

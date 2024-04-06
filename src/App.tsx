@@ -3,14 +3,11 @@ import druidLogo from '/images/logo.svg'
 import './App.css'
 import { processScripts } from './utils/processScripts'
 import ModuleSelector from './components/ModuleSelector'
-import { DruidScripts } from './utils/types'
 import ScriptSelector from './components/ScriptSelector'
+import { ArgsForm } from './components/ArgsForm'
+import { DruidScripts } from './types/script'
 
 function App() {
-  const [druidScripts, setDruidScripts] = useState<DruidScripts | null>(null)
-  const [chosenModule, setChosenModule] = useState<string | null>(null)
-  const [chosenScript, setChosenScript] = useState<string | null>(null)
-  const availableScripts = druidScripts && chosenModule ? Object.keys(druidScripts[chosenModule]) : null
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,6 +21,11 @@ function App() {
     }
     fetchData() // Call the async function inside useEffect
   }, [])
+  const [druidScripts, setDruidScripts] = useState<DruidScripts | null>(null)
+  const [chosenModule, setChosenModule] = useState<string | null>(null)
+  const [chosenScript, setChosenScript] = useState<string | null>(null)
+
+  const availableScripts = druidScripts && chosenModule ? Object.keys(druidScripts[chosenModule]) : null
 
   return (
     <>
@@ -59,9 +61,8 @@ function App() {
                 </span>
                 args
               </h2>
-              {druidScripts && chosenModule && chosenScript && (
-                <p>{JSON.stringify(druidScripts[chosenModule][chosenScript])}</p>
-              )}
+              {druidScripts && chosenModule && chosenScript && druidScripts[chosenModule][chosenScript] && (
+                <ArgsForm druidScript={druidScripts[chosenModule][chosenScript]}/>)}
             </div>
           </section>
           <section className="craft">

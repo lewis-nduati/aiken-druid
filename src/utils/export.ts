@@ -1,4 +1,4 @@
-import { PlutusExport, PlutusScriptVersion } from "./types.ts";
+import { PlutusExport, PlutusScriptVersion } from "../types/export.ts";
 const fs = require('fs').promises
 
 export async function exportPlutusJSON(

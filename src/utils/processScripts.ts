@@ -1,47 +1,42 @@
 import {
   AikenScript,
-  Definitions,
-  DruidScripts,
-  PlutusJSON,
-  ScriptComplexity,
-  TempScriptContents,
-} from "./types.ts";
-import { loadPlutusJSON } from "./loadPlutus.ts";
-import { paramToVal } from "./convertRef.ts"
+  AikenDefinitions,
+} from "../types/aiken.ts"
+import { DruidArgs, aikenParamToDruidArg } from "./args.ts"
+import { loadPlutusJSON } from "./loadPlutus.ts"
+import { v4 as uuidv4 } from 'uuid'
+import { DruidScripts } from "../types/script.ts"
 
 function splitScriptTitle(title: string): [string, string] {
-  const titleParts = title.split(".");
-  const scriptName = titleParts.pop();
-  const modulePath = `${titleParts}.ak`;
-  return [modulePath, scriptName ?? ""];
+  const titleParts = title.split(".")
+  const scriptName = titleParts.pop()
+  const modulePath = `${titleParts}.ak`
+  return [modulePath, scriptName ?? ""]
 }
 
-function aikenToDruid(definitions: Definitions) {
+function aikenToDruid(definitions: AikenDefinitions) {
   return function (acc: DruidScripts, aikenScript: AikenScript): DruidScripts {
-    const { compiledCode, hash, redeemer, title, ...otherContents } = aikenScript;
-    const scriptContents: TempScriptContents = { compiledCode, hash, redeemer: paramToVal(definitions)(redeemer)} 
-    if (otherContents.datum) {
-      scriptContents["datum"] = paramToVal(definitions)(otherContents.datum)
+    const { compiledCode, datum, hash, parameters, redeemer, title } = aikenScript
+    const apToPv = aikenParamToDruidArg(definitions)
+    const args: DruidArgs = {
+      datum: datum ? apToPv(datum) : undefined,
+      redeemer: apToPv(redeemer),
+      parameters: parameters ? parameters.map(apToPv) : undefined
     }
-    if (otherContents.parameters) {
-      scriptContents["parameters"] = otherContents.parameters.map(paramToVal(definitions))
-    }
-    const [module, scriptTitle] = splitScriptTitle(title);
-    const oldModuleContents = acc[module] ? acc[module] : {};
-    const complexity = aikenScript.parameters
-      ? ScriptComplexity.Param
-      : ScriptComplexity.Simple;
+    const [module, scriptTitle] = splitScriptTitle(title)
+    const oldModuleContents = acc[module] ? acc[module] : {}
     const newModuleContents = {
       ...oldModuleContents,
-      [scriptTitle]: { ...scriptContents, complexity},
-    };
-    return { ...acc, [module]: newModuleContents };
-  };
+      [scriptTitle]: { args, compiledCode, hash, uuid: uuidv4() },
+    }
+    return { ...acc, [module]: newModuleContents }
+  }
 }
 
 export async function processScripts(
   filePath: string,
 ): Promise<DruidScripts | undefined> {
-  const plutusJSON = await loadPlutusJSON(filePath);
-  return (plutusJSON?.validators.reduce(aikenToDruid(plutusJSON.definitions), {}));
+  const plutusJSON = await loadPlutusJSON(filePath)
+  return (plutusJSON?.validators.reduce(aikenToDruid(plutusJSON.definitions), {}))
 }
+
