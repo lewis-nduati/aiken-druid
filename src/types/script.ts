@@ -15,7 +15,8 @@ export interface DruidScript {
   args: DruidArgs
   compiledCode: string
   hash: string
-  uuid: string,
+  name: string
+  uuid: string
 }
 
 export interface DruidScripts {

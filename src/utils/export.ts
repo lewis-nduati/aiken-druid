@@ -1,7 +1,29 @@
 import { PlutusExport, PlutusScriptVersion } from "../types/export.ts";
 const fs = require('fs').promises
+import { Constr, Data } from "lucid-cardano"
+import { PlutusAlgVal, PlutusBytesVal, PlutusDataVal, PlutusIntVal, PlutusVal } from "../types/plutus.ts"
 
-export async function exportPlutusJSON(
+export function plutusValToLucidData(plutusVal: PlutusVal): Data {
+  const bytes = (plutusVal as PlutusBytesVal).bytes
+  if (bytes) {
+    return bytes
+  }
+  const int = (plutusVal as PlutusIntVal).int
+  if (int) {
+    return BigInt(int) 
+  }
+  const data = (plutusVal as PlutusDataVal).data
+  if (data) {
+    return data
+  }
+  const {constructor, fields} = (plutusVal as PlutusAlgVal)
+  if (constructor) {
+    return new Constr(constructor, fields.map(plutusValToLucidData))
+  }
+  throw new Error("Error converting PlutusVal to Lucid Data")
+}
+
+export async function exportPlutusFile(
   filename: string,
   type: PlutusScriptVersion,
   description: string,

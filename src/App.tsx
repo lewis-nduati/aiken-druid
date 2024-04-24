@@ -5,7 +5,8 @@ import { processScripts } from './utils/processScripts'
 import ModuleSelector from './components/ModuleSelector'
 import ScriptSelector from './components/ScriptSelector'
 import { ArgsForm } from './components/ArgsForm'
-import { DruidScripts } from './types/script'
+import { DruidScript, DruidScripts } from './types/script'
+import { ScriptExport } from './components/ScriptExport'
 
 function App() {
   useEffect(() => {
@@ -19,11 +20,20 @@ function App() {
         console.error('Error fetching data:', error)
       }
     }
-    fetchData() // Call the async function inside useEffect
+    fetchData()
   }, [])
   const [druidScripts, setDruidScripts] = useState<DruidScripts | null>(null)
   const [chosenModule, setChosenModule] = useState<string | null>(null)
   const [chosenScript, setChosenScript] = useState<string | null>(null)
+  const [scriptContents, setScriptContents] = useState<DruidScript | null>(null)
+
+  useEffect(() => {
+    if (druidScripts && chosenModule && chosenScript) {
+      setScriptContents(druidScripts[chosenModule][chosenScript])
+      console.log("script contents changed!")
+    }
+  }, [druidScripts, chosenModule, chosenScript])
+
 
   const availableScripts = druidScripts && chosenModule ? Object.keys(druidScripts[chosenModule]) : null
 
@@ -51,8 +61,10 @@ function App() {
               {chosenModule && availableScripts && (
                 <ScriptSelector scripts={availableScripts} onSelect={(script) => setChosenScript(script)} />
               )
-
               }
+              {scriptContents && (
+                <ScriptExport druidScript={scriptContents} key={`${scriptContents.uuid}_params`} />
+              )}
             </div>
             <div className="column args">
               <h2 className="args-title">
@@ -61,8 +73,8 @@ function App() {
                 </span>
                 args
               </h2>
-              {druidScripts && chosenModule && chosenScript && druidScripts[chosenModule][chosenScript] && (
-                <ArgsForm druidScript={druidScripts[chosenModule][chosenScript]}/>)}
+              {scriptContents && (
+                <ArgsForm key={scriptContents.uuid} druidScript={scriptContents} />)}
             </div>
           </section>
           <section className="craft">

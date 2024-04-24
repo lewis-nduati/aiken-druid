@@ -2,6 +2,7 @@ import { AikenAlgVal, AikenConstructor, AikenDataVal, AikenDefinitions, AikenFie
 import { DruidVal, DruidDataVal, DruidBytesVal, DruidIntVal, DruidAlgVal, DruidConstructor, DruidPrimVal } from "../types/druid"
 import { PlutusDataVal, PlutusVal, PlutusBytesVal, PlutusIntVal } from "../types/plutus"
 import { v4 as uuidv4 } from 'uuid'
+import cloneDeep from 'lodash.clonedeep'
 
 export interface DruidArgs {
   datum?: DruidArg
@@ -22,8 +23,20 @@ export class ArgTree_ {
     this.children = []
   }
 
-  getChildById(uuid: string): DruidArg {
+  clone(): ArgTree_ {
+    return cloneDeep(this)
+  }
+
+  getChildById(uuid: string): ArgTree_ | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    if (this.children.length == 0) {
+      console.log("No children!")
+    }
     for (const child of this.children) {
+      console.log(child.uuid)
       if (child.uuid === uuid) {
         return child
       }
@@ -32,7 +45,8 @@ export class ArgTree_ {
         return nestedChild
       }
     }
-    throw new Error("Invalid UUID")
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
   }
 }
 
@@ -46,14 +60,39 @@ export class BytesField extends ArgTree_ {
     this.hintText = "bytes"
     this.plutusValue = { "bytes": druidVal.bytes }
   }
-  showFieldVal(): string {
+  get fieldValue(): string {
     return this.plutusValue.bytes
   }
-  setFieldVal(newVal: string): void {
+  setFieldVal(newVal: string) {
+    // return produce(this, draft => { draft.plutusValue.bytes = newVal })
     this.plutusValue.bytes = newVal
   }
   toPlutusVal(): PlutusBytesVal {
     return this.plutusValue
+  }
+  clone(): BytesField {
+    return cloneDeep(this)
+  }
+  getChildById(uuid: string): DruidArg | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    if (this.children.length == 0) {
+      console.log("No children!")
+    }
+    for (const child of this.children) {
+      console.log(child.uuid)
+      if (child.uuid === uuid) {
+        return child
+      }
+      const nestedChild = child.getChildById(uuid)
+      if (nestedChild) {
+        return nestedChild
+      }
+    }
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
   }
 }
 
@@ -65,20 +104,44 @@ export class IntField extends ArgTree_ {
     this.hintText = "int"
     this.plutusValue = { "int": druidVal.int }
   }
-  showFieldVal(): string {
+  get fieldValue(): string {
     return this.plutusValue.int.toString()
   }
-  setFieldVal(newVal: string): void {
+  setFieldVal(newVal: string) {
     this.plutusValue.int = parseInt(newVal, 10)
   }
   toPlutusVal(): PlutusIntVal {
     return this.plutusValue
   }
+  clone(): IntField {
+    return cloneDeep(this)
+  }
+  getChildById(uuid: string): DruidArg | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    if (this.children.length == 0) {
+      console.log("No children!")
+    }
+    for (const child of this.children) {
+      console.log(child.uuid)
+      if (child.uuid === uuid) {
+        return child
+      }
+      const nestedChild = child.getChildById(uuid)
+      if (nestedChild) {
+        return nestedChild
+      }
+    }
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
+  }
 }
 
 export class DataField extends ArgTree_ {
   hintText: string
-  fieldValue: string
+  private _fieldValue: string
   plutusValue: PlutusDataVal | undefined
   validData: boolean
   constructor(druidVal: DruidDataVal) {
@@ -92,20 +155,20 @@ export class DataField extends ArgTree_ {
       this.plutusValue = undefined
       this.validData = false
     }
-    this.fieldValue = JSON.stringify(parsed, null, 2)
+    this._fieldValue = JSON.stringify(parsed, null, 2)
   }
-  showFieldVal(): string {
-    return this.fieldValue
+  get fieldValue() {
+    return this._fieldValue
   }
   setFieldVal(newVal: string) {
     const parsed: PlutusDataVal = JSON.parse(newVal)
     if (parsed) {
       this.plutusValue = parsed
-      this.fieldValue = JSON.stringify(parsed, null, 2)
+      this._fieldValue = JSON.stringify(parsed, null, 2)
       this.validData = true
     } else {
       this.validData = false
-      this.fieldValue = newVal
+      this._fieldValue = newVal
     }
   }
   toPlutusVal(): PlutusDataVal {
@@ -114,6 +177,27 @@ export class DataField extends ArgTree_ {
       return pVal
     }
     throw new Error("Invalid Plutus data value: please correct the form entry")
+  }
+  clone(): DataField {
+    return cloneDeep(this)
+  }
+  getChildById(uuid: string): DruidArg | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    for (const child of this.children) {
+      console.log(child.uuid)
+      if (child.uuid === uuid) {
+        return child
+      }
+      const nestedChild = child.getChildById(uuid)
+      if (nestedChild) {
+        return nestedChild
+      }
+    }
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
   }
 }
 
@@ -127,14 +211,38 @@ export class DropdownField extends ArgTree_ {
   }
 
   toPlutusVal(): PlutusVal {
-    const child = this.getChildById(this.selection) 
+    const child = this.getChildById(this.selection)
     if (child) {
       return child.toPlutusVal()
     }
     throw new Error("Invalid selection UUID")
   }
-  setFieldVal(selection: string): void {
+  setFieldVal(selection: string) {
     this.selection = selection
+  }
+  clone(): DropdownField {
+    return cloneDeep(this)
+  }
+  getChildById(uuid: string): DruidArg | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    if (this.children.length == 0) {
+      console.log("No children!")
+    }
+    for (const child of this.children) {
+      console.log(child.uuid)
+      if (child.uuid === uuid) {
+        return child
+      }
+      const nestedChild = child.getChildById(uuid)
+      if (nestedChild) {
+        return nestedChild
+      }
+    }
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
   }
 }
 
@@ -152,6 +260,30 @@ export class DropdownOption extends ArgTree_ {
       "constructor": this.index,
       "fields": this.children.map((arg: DruidArg) => arg.toPlutusVal())
     }
+  }
+  clone(): DropdownOption {
+    return cloneDeep(this)
+  }
+  getChildById(uuid: string): DruidArg | undefined {
+    if (this.uuid == uuid) {
+      return this
+    }
+    console.log(`Getting child ${uuid}`)
+    if (this.children.length == 0) {
+      console.log("No children!")
+    }
+    for (const child of this.children) {
+      console.log(child.uuid)
+      if (child.uuid === uuid) {
+        return child
+      }
+      const nestedChild = child.getChildById(uuid)
+      if (nestedChild) {
+        return nestedChild
+      }
+    }
+    return undefined
+    // throw new Error(`Invalid UUID: ${uuid}`)
   }
 }
 
@@ -206,7 +338,7 @@ function aikenToDruidConstructor(definitions: AikenDefinitions) {
     return {
       constructor,
       fields,
-      label: constr.title ? constr.title : "unknown",
+      label: constr.title ? constr.title : "()",
       uuid: uuidv4()
     }
   }
@@ -224,22 +356,22 @@ function aikenValToDruidVal(definitions: AikenDefinitions, label: string) {
 }
 
 function druidValToArg(druidVal: DruidVal | DruidConstructor): DruidArg {
-  const isConstr = isDruidConstr(druidVal)
-  if (isDruidAlgVal(druidVal) && !isConstr) {
-    return new DropdownField(druidVal)
-  } else if (isConstr) {
-    return new DropdownOption(druidVal)
+    const isConstr = isDruidConstr(druidVal)
+    if (isDruidAlgVal(druidVal) && !isConstr) {
+      return new DropdownField(druidVal)
+    } else if (isConstr) {
+      return new DropdownOption(druidVal)
+    }
+    else if (isDruidBytesVal(druidVal)) {
+      return new BytesField(druidVal)
+    }
+    else if (isDruidIntVal(druidVal)) {
+      return new IntField(druidVal)
+    }
+    else {
+      return new DataField(druidVal)
+    }
   }
-  else if (isDruidBytesVal(druidVal)) {
-    return new BytesField(druidVal)
-  }
-  else if (isDruidIntVal(druidVal)) {
-    return new IntField(druidVal)
-  }
-  else {
-    return new DataField(druidVal)
-  }
-}
 
 function isAikenParam(fieldOrParam: AikenField | AikenParam): fieldOrParam is AikenParam {
   const asParam = fieldOrParam as AikenParam
@@ -264,11 +396,6 @@ function aikenFieldOrParamToDruidVal(
     return aikenValToDruidVal(definitions, label)(aikenVal)
   }
 }
-
-// function isAikenPrimVal(aikenVal: AikenVal): aikenVal is AikenPrimVal {
-//   const dataType = (aikenVal as AikenPrimVal)?.dataType
-//   return dataType == "bytes" || dataType == "integer"
-// }
 
 function aikenPrimToDruidVal(label: string, primType: AikenPrimVal): DruidPrimVal {
   const uuid = uuidv4()
