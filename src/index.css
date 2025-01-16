@@ -38,6 +38,12 @@ body {
   min-height: 100vh;
 }
 
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -205,17 +211,20 @@ section {
 
 .craft {
   padding: 1rem;
+  text-align: left;
 }
 
 .craft button {
+  display: block;
   background-color: #8192ad;
   border: none;
   color: #fff;
   font-weight: 700;
   font-family: 'Rye';
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   outline: none; 
   text-shadow: 2px 2px 0 #373745;
+  margin: auto;
 }
 
 .craft button:hover {

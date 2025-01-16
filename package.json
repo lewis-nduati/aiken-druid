@@ -10,11 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lucid-evolution/core-utils": "^0.1.6",
+    "@lucid-evolution/plutus": "^0.1.9",
+    "@lucid-evolution/uplc": "^0.2.5",
+    "@lucid-evolution/utils": "^0.1.12",
+    "@meshsdk/common": "^1.8.12",
+    "@meshsdk/core-csl": "^1.8.11",
     "immer": "^10.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "use-immer": "^0.9.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "vite-plugin-top-level-await": "^1.4.1"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
@@ -25,14 +32,15 @@
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "cbor": "^9.0.2",
+    "cbor-web": "^9.0.2",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "lodash.clonedeep": "^4.5.0",
-    "lucid-cardano": "^0.10.7",
     "typescript": "^5.2.2",
-    "vite": "^5.2.0"
+    "vite": "^5.2.0",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-wasm": "^3.3.0"
   }
 }

@@ -27,7 +27,7 @@ function aikenToDruid(definitions: AikenDefinitions) {
     const oldModuleContents = acc[module] ? acc[module] : {}
     const newModuleContents = {
       ...oldModuleContents,
-      [scriptTitle]: { args, compiledCode, hash, uuid: uuidv4() },
+      [scriptTitle]: { args, compiledCode, hash, uuid: uuidv4(), name: scriptTitle },
     }
     return { ...acc, [module]: newModuleContents }
   }

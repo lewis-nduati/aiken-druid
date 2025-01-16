@@ -77,9 +77,6 @@ function App() {
                 <ArgsForm key={scriptContents.uuid} druidScript={scriptContents} />)}
             </div>
           </section>
-          <section className="craft">
-            <button className="accent1">⚚ craft artifacts ⚚</button>
-          </section>
         </main>
         <footer className="footer">
           © 2024 &mdash; ajnabi workshop
