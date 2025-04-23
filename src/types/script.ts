@@ -12,6 +12,9 @@ export interface TempScriptContents {
 }
 
 export interface DruidScript {
+  [x: string]: any
+  selectedModule<T>(selectedModule: any): [any, any]
+  modules: any
   args: DruidArgs
   compiledCode: string
   hash: string

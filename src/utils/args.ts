@@ -307,7 +307,11 @@ export function isDruidConstr(druidVal: DruidVal | DruidConstructor): druidVal i
   return (druidVal as DruidConstructor)?.fields !== undefined
 }
 
-function refToDef(refString: string): string {
+function refToDef(refString: string | undefined): string {
+  if (!refString){
+    console.error("refTodef received undefined refString");
+    return "unknown";
+  }
   const parts = refString.split("/definitions/")
   // Get the last part of the split string
   const lastPart = parts[parts.length - 1]

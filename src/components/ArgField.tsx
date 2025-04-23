@@ -1,52 +1,98 @@
-import { DruidArg, InputField, DropdownField, DropdownOption, BytesField, IntField } from "../utils/args"
+import React from "react";
+import {
+  DruidArg,
+  InputField,
+  DropdownField,
+  DropdownOption,
+  BytesField,
+  IntField,
+} from "../utils/args";
+import TextField from "@mui/material/TextField";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import Box from "@mui/material/Box";
 
-type InputType = "number" | "text" | "textarea"
-
+// Type guard
 function isInputField(arg: DruidArg): arg is InputField {
-  return !(arg instanceof DropdownField || arg instanceof DropdownOption)
+  return !(arg instanceof DropdownField || arg instanceof DropdownOption);
 }
 
 interface ArgFieldProps {
-  arg: DruidArg
-  onChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>
+  arg: DruidArg;
+  onChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { target: { value: string; name?: string } }>
+  ) => void;
 }
 
 export const ArgField = ({ arg, onChange }: ArgFieldProps) => {
-  const { children, label, uuid } = arg
+  const { children, label, uuid } = arg;
+
+  // Basic input: string or number
   if (isInputField(arg)) {
-    const inputType: InputType = (arg instanceof BytesField) ? "text" :
-      (arg instanceof IntField) ? "number" : "textarea"
-    return (<>
-      <label htmlFor={uuid}>{label}</label>
-      <input
-        type={inputType}
-        id={uuid}
-        value={arg.fieldValue}
-        placeholder={arg.hintText}
-        onChange={onChange}
-      /></>)
+    const inputType =
+      arg instanceof BytesField ? "text" :
+      arg instanceof IntField ? "number" :
+      "text";
+
+    return (
+      <Box mb={3}>
+        <TextField
+          fullWidth
+          id={uuid}
+          name={uuid}
+          type={inputType}
+          label={label}
+          value={arg.fieldValue}
+          placeholder={arg.hintText}
+          onChange={onChange}
+          variant="outlined"
+        />
+      </Box>
+    );
   }
+
+  // Dropdown with nested children
   if (arg instanceof DropdownField) {
-    const numChildren = arg.children.length
-    if (numChildren == 1) {
-      const child = arg.children[0]
-      return (<>
-        {child.children.length !== 0 ? (<><p>{label}</p>{child.children.map((c) => {
-         return (
-          <ArgField arg={c} onChange={onChange} key={c.uuid} />
-          )
-         })}</>) : <p>()</p>}
-      </>)
-    }
-    return (<><select id={uuid} value={arg.selection}
-      onChange={onChange}
-    >
-      {children.map((child) => <ArgField arg={child} onChange={onChange} key={child.uuid}/>)}
-    </select>
-    {arg.getChildById(arg.selection)?.children.map((c) => <ArgField arg={c} onChange={onChange} key={c.uuid}/>)}
-    </>)
+    const selectedChild = arg.getChildById(arg.selection);
+
+    return (
+      <Box mb={3}>
+        <FormControl fullWidth variant="outlined">
+          <InputLabel id={`${uuid}-label`}>{label}</InputLabel>
+          <Select
+            labelId={`${uuid}-label`}
+            id={uuid}
+            name={uuid}
+            value={arg.selection}
+            onChange={(e) =>
+              onChange({
+                target: { value: e.target.value, name: uuid }
+              } as unknown as React.ChangeEvent<{ target: { value: string; name?: string } }>)
+            }
+            label={label}
+          >
+            {children.map((child) => (
+              <MenuItem key={child.uuid} value={child.uuid}>
+                {child.label || "Unnamed Option"}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Render nested children recursively */}
+        {selectedChild?.children?.map((nestedArg) => (
+          <ArgField key={nestedArg.uuid} arg={nestedArg} onChange={onChange} />
+        ))}
+      </Box>
+    );
   }
+
+  // Individual dropdown option (shouldn't render alone)
   if (arg instanceof DropdownOption) {
-    return (<option value={uuid}>{label}</option>)
+    return <MenuItem value={uuid}>{label || "Unnamed Option"}</MenuItem>;
   }
-}
+
+  return null;
+};
